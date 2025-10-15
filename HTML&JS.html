@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WWE Merchadise Store</title>
+</head>
+<body>
+
+  <h1>WWE Merchadise Store</h1>
+  <div id="orderBox"></div>
+
+  <script>
+   
+    alert("Welcome to the WWE Merchadise Store!");
+
+    
+    let name = prompt("What's your name?");
+    
+    let item = prompt("What Wrestling T-shirt do you want?");
+    
+    let qty = parseInt(prompt("How many? (1 to 99)"));
+
+   
+    if ( qty < 1 || qty > 99) {
+      
+      alert("error. try again 1-99");
+    } 
+    
+    else {
+      
+      let time = new Date();
+    
+      let hr = time.getHours();
+    
+      let greet;
+
+      if (hr < 12) {
+        greet = "Good Morning";
+      }
+      else if (hr < 18) {
+        greet = "Good Afternoon";
+      } 
+      else {
+        greet = "Good Evening";
+      }
+
+    
+      let arrival = new Date();
+      
+      arrival.setDate(arrival.getDate() + 7);
+      
+      let arriveStr = arrival.toDateString();
+
+      
+      document.getElementById("orderBox").innerHTML = `
+        <h2>${greet}, ${name}! Thanks for ordering!</h2>
+        <p><b>Item:</b> ${item}</p>
+        <p><b>Quantity:</b> ${qty}</p>
+        <p><b>Arrival Date:</b> ${arriveStr}</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
