@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cool T-Shirt Registration</title>
+</head>
+<body style="font-family: Arial; margin: 30px;">
+
+  <h2>Welcome to the Cool T-Shirt Store!</h2>
+  <p>Please register below so we can keep you updated on our awesome T-shirts.</p>
+
+  <!-- Registration Form -->
+  <form id="registrationForm">
+    <label>First Name:</label><br>
+    <input type="text" id="firstName"><br><br>
+
+    <label>Last Name:</label><br>
+    <input type="text" id="lastName"><br><br>
+
+    <label>Email Address:</label><br>
+    <input type="email" id="email"><br><br>
+
+    <label>Password:</label><br>
+    <input type="password" id="password"><br>
+    <small>* Password must include "!" or "?"</small><br><br>
+
+    <label>Date of Birth:</label><br>
+    <input type="date" id="dob"><br><br>
+
+    <input type="submit" value="Register">
+  </form>
+
+  <h3 id="statusMessage"></h3>
+  <div id="userInfo"></div>
+
+  <script>
+    // When the user submits the form...
+    document.getElementById("registrationForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // Prevents the page from refreshing
+
+     
+      let firstName = document.getElementById("firstName").value.trim();
+      let lastName = document.getElementById("lastName").value.trim();
+      let email = document.getElementById("email").value.trim();
+      let password = document.getElementById("password").value.trim();
+      let dob = document.getElementById("dob").value;
+
+      let message = document.getElementById("statusMessage");
+      let userInfo = document.getElementById("userInfo");
+
+     
+      if (!firstName || !lastName || !email || !password || !dob) {
+        message.style.color = "red";
+        message.textContent = "Registration Failed: Please fill in all fields.";
+        userInfo.innerHTML = "";
+        return;
+      }
+
+      
+      if (!password.includes("!") && !password.includes("?")) {
+        message.style.color = "red";
+        message.textContent = "egistration Failed: Password must contain ! or ?";
+        userInfo.innerHTML = "";
+        return;
+      }
+
+      
+      let hiddenPassword = "*".repeat(password.length);
+
+     
+      message.style.color = "green";
+      message.textContent = "registration Successful!";
+
+      
+      userInfo.innerHTML = `
+        <p><b>First Name:</b> ${firstName}</p>
+        <p><b>Last Name:</b> ${lastName}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Password:</b> ${hiddenPassword}</p>
+        <p><b>Date of Birth:</b> ${dob}</p>
+      `;
+    });
+  </script>
+</body>
+</html>
