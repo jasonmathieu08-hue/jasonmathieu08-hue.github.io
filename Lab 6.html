@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cat Facts</title>
+</head>
+<body>
+
+  <h1>Cat Facts</h1>
+
+  <button onclick="getCatFacts()">Load Cat Facts</button>
+
+  <br><br>
+
+  <!-- Starting picture -->
+  <img id="catPic" src="https://placekitten.com/300/200" width="300">
+
+  <br><br>
+
+  <!-- Table for facts -->
+  <table border="1">
+    <thead>
+      <tr>
+        <th>factId</th>
+        <th>fact</th>
+      </tr>
+    </thead>
+    <tbody id="factsBody"></tbody>
+  </table>
+
+  <script>
+    function getCatFacts() {
+      fetch("https://brianobruno.github.io/cats.json")
+        .then(res => res.json())
+        .then(data => {
+          // Sort by factId
+          data.facts.sort((a, b) => a.factId - b.factId);
+
+          // Update image
+          document.getElementById("catPic").src = data.catPhoto;
+
+          // Show facts in table
+          let tableBody = document.getElementById("factsBody");
+          tableBody.innerHTML = "";
+          data.facts.forEach(f => {
+            tableBody.innerHTML += "<tr><td>" + f.factId + "</td><td>" + f.text + "</td></tr>";
+          });
+        })
+        .catch(err => {
+          alert("Error loading cat facts!");
+          console.log(err);
+        });
+    }
+  </script>
+
+</body>
+</html>
