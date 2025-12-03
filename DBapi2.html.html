@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBZ Battle Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0a0a1a; color: white; padding: 20px; }
+        .card { background: #1a1a2e; border: 1px solid #444; color: white; }
+        .nav-tabs .nav-link { color: #00b4ff; }
+        .nav-tabs .nav-link.active { background: #00b4ff; color: white; }
+        .character-card { cursor: pointer; transition: transform 0.3s; }
+        .character-card:hover { transform: scale(1.05); border-color: #00b4ff; }
+        .selected { border: 3px solid #ff9900; box-shadow: 0 0 20px #ff9900; }
+        .vs-badge { background: #ff0000; font-size: 1.5rem; padding: 10px 20px; }
+        .stat-bar { height: 20px; background: #333; border-radius: 10px; margin: 5px 0; }
+        .stat-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #00b4ff, #ff00ff); }
+        .winner { animation: glow 2s infinite; }
+        @keyframes glow {
+            0% { box-shadow: 0 0 10px gold; }
+            50% { box-shadow: 0 0 30px gold; }
+            100% { box-shadow: 0 0 10px gold; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4" style="color: #00b4ff;">⚔️ DBZ Battle Simulator</h1>
+        
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item"><a class="nav-link active" href="#" data-page="characters">Characters</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="planets">Planets</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="battle">Battle Arena</a></li>
+        </ul>
+        
+        <div id="content">
+            <!-- Characters Page -->
+            <div id="characters-page">
+                <input type="text" id="search" class="form-control mb-3" placeholder="Search characters...">
+                <div class="row" id="characters-grid"></div>
+            </div>
+            
+            <!-- Planets Page -->
+            <div id="planets-page" style="display:none;">
+                <div class="row" id="planets-grid"></div>
+            </div>
+            
+            <!-- Battle Arena -->
+            <div id="battle-page" style="display:none;">
+                <div class="row mb-4">
+                    <div class="col-md-5" id="fighter1"></div>
+                    <div class="col-md-2 text-center">
+                        <div class="vs-badge rounded-pill d-inline-block mt-5">VS</div>
+                        <button class="btn btn-danger btn-lg w-100 mt-3" onclick="simulateBattle()">⚔️ FIGHT!</button>
+                    </div>
+                    <div class="col-md-5" id="fighter2"></div>
+                </div>
+                <div id="battle-result" class="text-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Character Data
+const characters = [
+    { id: 1, name: "Goku", race: "Saiyan", ki: 1000000, maxKi: 20000000, speed: 98, strength: 95, defense: 90, image: "https://wallpaperaccess.com/full/4593193.jpg", affiliation: "Z Fighters" },
+    { id: 2, name: "Vegeta", race: "Saiyan", ki: 950000, maxKi: 18000000, speed: 96, strength: 96, defense: 88, image: "https://pbs.twimg.com/media/FteG74WXgAMYxcW.png", affiliation: "Z Fighters" },
+    { id: 3, name: "Frieza", race: "Frieza Race", ki: 1200000, maxKi: 15000000, speed: 90, strength: 92, defense: 85, image: "https://i.pinimg.com/originals/4d/9b/a9/4d9ba9a5cb079194ef884d75105c12dc.png", affiliation: "Frieza Force" },
+    { id: 4, name: "Cell", race: "Bio-Android", ki: 1100000, maxKi: 16000000, speed: 94, strength: 94, defense: 92, image: "https://static1.cbrimages.com/wordpress/wp-content/uploads/2024/05/cell-dragon-ball-z.jpg", affiliation: "Android" },
+    { id: 5, name: "Majin Buu", race: "Majin", ki: 1300000, maxKi: 17000000, speed: 85, strength: 98, defense: 96, image: "https://i.pinimg.com/736x/b3/aa/26/b3aa26e1bfe59bd562a14a6ebc004bab.jpg", affiliation: "Majin" },
+    { id: 6, name: "Piccolo", race: "Namekian", ki: 600000, maxKi: 8000000, speed: 88, strength: 86, defense: 89, image: "https://i.pinimg.com/originals/67/a4/30/67a4303f45b6ea2b4230e6293c7e1af6.png?nii=t", affiliation: "Z Fighters" },
+    { id: 7, name: "Gohan", race: "Half-Saiyan", ki: 900000, maxKi: 14000000, speed: 92, strength: 93, defense: 87, image: "https://i.pinimg.com/originals/c8/c8/5f/c8c85f8fb8ebdfd8dca1074f0b429a4b.jpg", affiliation: "Z Fighters" },
+    { id: 8, name: "Trunks", race: "Half-Saiyan", ki: 700000, maxKi: 9000000, speed: 91, strength: 89, defense: 86, image: "https://i.pinimg.com/474x/df/fb/6e/dffb6e9060cd4e5cd35a161f85933108.jpg?nii=t", affiliation: "Z Fighters" },
+    { id: 9, name: "Android 18", race: "Android", ki: 500000, maxKi: 7000000, speed: 89, strength: 87, defense: 84, image: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/03c8d383-c259-4476-810e-9d8e743c41d1/dhpdd45-74bba9b8-2c71-4171-8163-360403b23846.jpg/v1/fill/w_1280,h_960,q_75,strp/android_18_by_pokearceus_dhpdd45-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTYwIiwicGF0aCI6IlwvZlwvMDNjOGQzODMtYzI1OS00NDc2LTgxMGUtOWQ4ZTc0M2M0MWQxXC9kaHBkZDQ1LTc0YmJhOWI4LTJjNzEtNDE3MS04MTYzLTM2MDQwM2IyMzg0Ni5qcGciLCJ3aWR0aCI6Ijw9MTI4MCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.Te7NSXfOej9GvU6wrITdgPmsyVH6I5ZqLM1N-doWIRk", affiliation: "Z Fighters" },
+    { id: 10, name: "Beerus", race: "God of Destruction", ki: 5000000, maxKi: 50000000, speed: 100, strength: 100, defense: 100, image: "https://wallpapercave.com/wp/wp2297098.jpg", affiliation: "Gods" }
+];
+
+        // Planets data English
+        const planets = [
+            { name: "Earth", description: "Home planet of humanity and main setting for Dragon Ball. A blue planet with diverse ecosystems.", isDestroyed: false, diameter: 12742 },
+            { name: "Namek", description: "Home planet of the Namekians. A green planet with three suns and vast oceans.", isDestroyed: true, diameter: 15000 },
+            { name: "Planet Vegeta", description: "Home planet of the Saiyan race. A harsh world with high gravity, destroyed by Frieza.", isDestroyed: true, diameter: 18000 },
+            { name: "Frieza Planet 419", description: "One of Frieza's many conquered planets used as military bases.", isDestroyed: false, diameter: 12000 },
+            { name: "Kaioshin Realm", description: "Sacred realm where the Supreme Kais reside. Located outside the mortal universe.", isDestroyed: false, diameter: null },
+            { name: "Heaven", description: "Realm where worthy souls go after death. A peaceful dimension of clouds and temples.", isDestroyed: false, diameter: null },
+            { name: "Hell", description: "Realm where evil souls are punished. A fiery dimension of eternal torment.", isDestroyed: false, diameter: null },
+            { name: "Tournament of Power Arena", description: "Floating arena in the Null Realm where multiversal tournaments are held.", isDestroyed: false, diameter: 5000 },
+            { name: "Planet Yardrat", description: "Planet where Goku spent a Year training and Learned Instant Transmission.", isDestroyed: false, diameter: null }
+        ];
+
+        let selectedFighters = [null, null];
+        
+        // Nav
+        document.querySelectorAll('[data-page]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Page Select
+                ['characters-page', 'planets-page', 'battle-page'].forEach(page => {
+                    document.getElementById(page).style.display = 'none';
+                });
+                document.getElementById(`${e.target.dataset.page}-page`).style.display = 'block';
+                
+                if (e.target.dataset.page === 'characters') renderCharacters(characters);
+                if (e.target.dataset.page === 'planets') renderPlanets();
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = characters.filter(char => 
+                char.name.toLowerCase().includes(term) || 
+                char.race.toLowerCase().includes(term)
+            );
+            renderCharacters(filtered);
+        });
+        
+        function renderCharacters(chars) {
+            const grid = document.getElementById('characters-grid');
+            grid.innerHTML = chars.map(char => `
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card character-card" onclick="selectCharacter(${char.id})">
+                        <img src="${char.image}" class="card-img-top" style="height:200px;object-fit:cover;" 
+                             onerror="this.src='https://via.placeholder.com/300x200/1a1a2e/00b4ff?text=${char.name}'">
+                        <div class="card-body">
+                            <h5>${char.name}</h5>
+                            <p class="mb-1"><strong>Race:</strong> ${char.race}</p>
+                            <p class="mb-1"><strong>Power:</strong> ${char.ki.toLocaleString()}</p>
+                            <div class="stat-bar"><div class="stat-fill" style="width:${char.ki/50000}%"></div></div>
+                            <button class="btn btn-sm btn-warning mt-2" onclick="addToBattle(${char.id});event.stopPropagation();">
+                                Add to Battle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderPlanets() {
+            const grid = document.getElementById('planets-grid');
+            grid.innerHTML = planets.map(planet => `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="text-warning">${planet.name}</h5>
+                            <p>${planet.description}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge ${planet.isDestroyed ? 'bg-danger' : 'bg-success'}">
+                                    ${planet.isDestroyed ? 'Destroyed' : 'Intact'}
+                                </span>
+                                ${planet.diameter ? `<span>Diameter: ${planet.diameter.toLocaleString()} km</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectCharacter(id) {
+            const char = characters.find(c => c.id === id);
+            const cards = document.querySelectorAll('.character-card');
+            cards.forEach(card => card.classList.remove('selected'));
+            
+            // Find and highlight the clicked card
+            cards.forEach(card => {
+                if (card.querySelector('h5').textContent === char.name) {
+                    card.classList.add('selected');
+                }
+            });
+            
+            alert(`Selected: ${char.name}\nPower Level: ${char.ki.toLocaleString()}\nRace: ${char.race}`);
+        }
+        
+        function addToBattle(id) {
+            const char = characters.find(c => c.id === id);
+            
+            if (!selectedFighters[0]) {
+                selectedFighters[0] = char;
+                renderFighter(char, 1);
+            } else if (!selectedFighters[1]) {
+                selectedFighters[1] = char;
+                renderFighter(char, 2);
+            } else {
+                // Replace fighter 2
+                selectedFighters[1] = char;
+                renderFighter(char, 2);
+            }
+            
+            // Battle Page
+            document.querySelector('[data-page="battle"]').click();
+        }
+        
+        function renderFighter(char, position) {
+            const container = document.getElementById(`fighter${position}`);
+            container.innerHTML = `
+                <div class="card text-center">
+                    <div class="card-header bg-dark">
+                        <h4>Fighter ${position}: ${char.name}</h4>
+                    </div>
+                    <img src="${char.image}" class="card-img-top" style="height:250px;object-fit:cover;"
+                         onerror="this.src='https://via.placeholder.com/300x250/1a1a2e/00b4ff?text=${char.name}'">
+                    <div class="card-body">
+                        <p><strong>Race:</strong> ${char.race}</p>
+                        <p><strong>Max Power:</strong> ${char.maxKi.toLocaleString()}</p>
+                        <div class="stat-bar"><div class="stat-fill" style="width:${char.speed}%">Speed: ${char.speed}</div></div>
+                        <div class="stat-bar"><div class="stat-fill" style="width:${char.strength}%">Strength: ${char.strength}</div></div>
+                        <div class="stat-bar"><div class="stat-fill" style="width:${char.defense}%">Defense: ${char.defense}</div></div>
+                        <button class="btn btn-sm btn-outline-warning mt-2" onclick="selectedFighters[${position-1}] = null; renderFighter({name: 'Select Fighter'}, ${position})">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function simulateBattle() {
+            if (!selectedFighters[0] || !selectedFighters[1]) {
+                alert('Select both fighters first!');
+                return;
+            }
+            
+            const [f1, f2] = selectedFighters;
+            
+            // Battle Score Results
+            const f1Score = (f1.maxKi * 0.5) + (f1.speed * 1000) + (f1.strength * 1500) + (f1.defense * 1000);
+            const f2Score = (f2.maxKi * 0.5) + (f2.speed * 1000) + (f2.strength * 1500) + (f2.defense * 1000);
+            
+            let winner, loser, analysis = '';
+            
+            if (f1Score > f2Score) {
+                winner = f1;
+                loser = f2;
+                analysis = `${f1.name} wins! Their superior ${f1.maxKi > f2.maxKi ? 'power level' : f1.speed > f2.speed ? 'speed' : 'strength'} gave them the edge.`;
+            } else {
+                winner = f2;
+                loser = f1;
+                analysis = `${f2.name} wins! Their ${f2.maxKi > f1.maxKi ? 'higher power level' : 'better combat skills'} secured victory.`;
+            }
+            
+            const powerDiff = Math.abs(f1Score - f2Score).toLocaleString();
+            
+            const resultHTML = `
+                <div class="card mt-4 ${f1Score > f2Score ? 'border-warning' : 'border-danger'}">
+                    <div class="card-header bg-dark">
+                        <h3 class="text-center ${f1Score > f2Score ? 'text-warning' : 'text-danger'}">
+                            🏆 VICTORY FOR ${winner.name.toUpperCase()}! 🏆
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 text-end">
+                                <h5>${f1.name}</h5>
+                                <p>Battle Score: ${Math.round(f1Score).toLocaleString()}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>${f2.name}</h5>
+                                <p>Battle Score: ${Math.round(f2Score).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="progress my-3" style="height: 30px;">
+                            <div class="progress-bar bg-warning" style="width: ${(f1Score/(f1Score+f2Score))*100}%">
+                                ${Math.round((f1Score/(f1Score+f2Score))*100)}%
+                            </div>
+                            <div class="progress-bar bg-danger" style="width: ${(f2Score/(f1Score+f2Score))*100}%">
+                                ${Math.round((f2Score/(f1Score+f2Score))*100)}%
+                            </div>
+                        </div>
+                        <h5 class="text-info">Battle Analysis:</h5>
+                        <p>${analysis}</p>
+                        <p><strong>Power Difference:</strong> ${powerDiff} battle points</p>
+                        <p class="text-muted">Based on Power Level, Speed, Strength, and Defense stats</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('battle-result').innerHTML = resultHTML;
+        }
+        
+        // Init
+        renderCharacters(characters);
+    </script>
+</body>
+</html>
